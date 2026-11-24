@@ -1,3 +1,14 @@
-build/
-.direnv/
-result*
+# CMake
+/build/
+/build-*/
+
+# clangd
+/.cache/
+
+# direnv
+/.direnv/
+/.envrc
+
+# Nix
+/result
+/result-*

@@ -4,14 +4,14 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }: 
-    flake-utils.lib.eachDefaultSystem (system: 
-      let 
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        buneslots = pkgs.stdenv.mkDerivation {
+        buneslots = pkgs.stdenv.mkDerivation rec {
           pname = "buneslots";
-          version = "0";
+          version = "2026.11.1";
 
           nativeBuildInputs = with pkgs; [
             cmake
@@ -25,10 +25,9 @@
 
           src = self;
 
-          installPhase = ''
-            mkdir $out
-            cp -r bin/ $out
-          '';
+          cmakeFlags = [
+            (pkgs.lib.cmakeFeature "BUNESLOTS_VERSION" version)
+          ];
         };
 
         shell = pkgs.mkShell {
@@ -47,6 +46,10 @@
 
         devShells.default = shell;
 
-        packages.buneslots = buneslots;
+        packages = {
+          inherit buneslots;
+
+          default = buneslots;
+        };
       });
 }
