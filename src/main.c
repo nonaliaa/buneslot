@@ -5,6 +5,10 @@
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 
+#ifdef _WIN32
+#define realpath(N,R) _fullpath((R),(N),_MAX_PATH)
+#endif /* _WIN32*/
+
 bool draw_img(SDL_Window *window, SDL_Surface *image)
 {
     if (!window) {
@@ -59,8 +63,11 @@ int main(int argc, char *argv[])
         free(img_path);
         return 1;
     }
-
+    #ifdef _WIN32
+    char *window_name = strrchr(img_path, '\\');
+    #else
     char *window_name = strrchr(img_path, '/');
+    #endif
     if (window_name) {
         /* Step over the separator. */
         window_name += 1;

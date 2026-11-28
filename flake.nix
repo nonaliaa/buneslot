@@ -4,31 +4,25 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {
+          inherit system;
 
-        buneslots = pkgs.stdenv.mkDerivation rec {
-          pname = "buneslots";
-          version = "2026.11.1";
-
-          nativeBuildInputs = with pkgs; [
-            cmake
-            ninja
-          ];
-
-          buildInputs = with pkgs; [
-            sdl3
-            sdl3-image
-          ];
-
-          src = self;
-
-          cmakeFlags = [
-            (pkgs.lib.cmakeFeature "BUNESLOTS_VERSION" version)
+          overlays = [
+            (final: prev: {
+              buneslots = final.callPackage ./nix/pkgs/buneslots.nix { };
+            })
           ];
         };
+        win64Pkgs = pkgs.callPackage ./nix/cross/win64.nix { };
 
         shell = pkgs.mkShell {
           packages = with pkgs; [
@@ -36,7 +30,7 @@
             valgrind
           ];
 
-          inputsFrom = [
+          inputsFrom = with pkgs; [
             buneslots
           ];
         };
@@ -46,10 +40,12 @@
 
         devShells.default = shell;
 
-        packages = {
-          inherit buneslots;
+        packages = rec {
+          inherit (pkgs) buneslots;
+          buneslots-win64 = win64Pkgs.buneslots;
 
           default = buneslots;
         };
-      });
+      }
+    );
 }
